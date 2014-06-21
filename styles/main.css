@@ -1,0 +1,53 @@
+html {
+  height:100%;
+}
+body {
+  background-color: #eee !important;
+  height:100%;
+}
+
+h1 {
+  position: absolute;
+  bottom: 20px;
+  text-align: center;
+  width: 100%;
+  line-height: 120%;
+  font-family: Arial, sans-serif;
+  color: rgb(66,66,66);
+  letter-spacing: -0.05em;
+}
+.centering-table{
+  display: table; 
+  height: 100%;
+  width:100%; 
+  overflow: hidden;
+  padding-bottom:10px;
+}
+.centering-table-cell{
+  display: table-cell; 
+  vertical-align: middle;
+  padding:5px;
+  text-align:center;
+}
+#webcam{
+  width:400px; 
+  height:300px;
+  margin:0 auto;
+  margin-top:20px;
+  margin-bottom:10px;
+}
+#take-picture-button-container{
+
+}
+#save-picture-and-take-another-buttons-container{
+  display:none;
+}
+.page{
+  display:none;
+}
+.some-space-below{
+  margin-bottom: 7px;
+}
+.photo-control{
+  display:none;
+}
