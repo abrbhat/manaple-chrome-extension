@@ -51,3 +51,6 @@ h1 {
 .photo-control{
   display:none;
 }
+#attendance-data-stored-message{
+  display:none;
+}

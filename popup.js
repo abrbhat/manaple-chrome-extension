@@ -1,5 +1,10 @@
 function sendAttendanceData(email,authToken,attendanceData) {
   attendanceData = getAttendanceData();
+  if (attendanceData == null){
+    return
+  }
+  console.log('in send at data');
+  console.log(attendanceData);
   $.each(attendanceData, function( key, value ) {
     rawImageData = value.replace(/^data\:image\/\w+\;base64\,/, '');                
     attendanceData[key] = rawImageData;
@@ -42,34 +47,49 @@ function setWebcam(){
   Webcam.attach( '#webcam' );
   Webcam.setSWFLocation("/public/webcam.swf");
 }
-function loadEmployeeData(authToken){
-  return { '124': 'Jatin', '158': 'Manish', '781': 'Suman' } ; 
+function loadEmployeeData(authEmail,authToken){
+  $.ajax({
+        type: "GET",
+        url: "http://localhost:3000/api/get_employee_data.json",
+        headers: { 'x-api-email': authEmail,
+                   'x-api-token': authToken },
+        error: function(){
+          $("#message").html("Could not get employee data from server");
+        },
+        success: function(employeeData){  
+          console.log(employeeData);
+          chrome.storage.local.set({'employeeData':employeeData});
+          populateSelectNameTag(employeeData);
+        }
+      });      
+}
+function populateSelectNameTag(employeeData){
+    var selectName = document.getElementById('select-name');
+    selectName.options.length = 0; // clear out existing items
+    for (var userId in employeeData) {
+      var employeeName = employeeData[userId];    
+      selectName.options.add(new Option(employeeName, userId));  
+    };
 }
 document.addEventListener('DOMContentLoaded', function () {
-  var authToken,attendanceData = {}, employeeId, dataUri, rawImageData, employeeData = {};
+  var authToken,authEmail,attendanceData = {}, employeeId, dataUri, rawImageData, employeeData = {};
   var storage = chrome.storage.local;
-  employeeData = { '124': 'Jatin', '158': 'Manish', '781': 'Suman' };
-  storage.set({'employeeData':employeeData});
+  //employeeData = { '124': 'Jatin', '158': 'Manish', '781': 'Suman' };
+  //storage.set({'employeeData':employeeData});
   storage.get('employeeData',function(result){
     if (result['employeeData'] != null)
     {
       employeeData = result['employeeData'];        
       $.ajax({
         type: "HEAD",
-        url: "http://manaple.com",
+        url: "http://localhost:3000",
         error: function(){
           $("#take-photo-page").show();
           $("#take-picture-button-container").show();
           setWebcam();
-          var selectName = document.getElementById('select-name');
-          selectName.options.length = 0; // clear out existing items
-          for (var userId in employeeData) {
-            var employeeName = employeeData[userId];    
-            selectName.options.add(new Option(employeeName, userId));  
-          };
+          populateSelectNameTag(employeeData);
         },
         success: function(data){  
-          console.log('here');
           $(".page").hide();
           $("#already-online-page").show();
           $.each(employeeData, function( key, value ) {
@@ -81,6 +101,13 @@ document.addEventListener('DOMContentLoaded', function () {
     else{
       $("#no-employee-data-page").show();
     }
+  });
+  storage.get('attendanceData',function(result){
+      if (result['attendanceData'] != null)
+      {
+        console.log(attendanceData);
+        $("#attendance-data-stored-message").show();   
+      }
   });
   
   //storage.remove(storedEmployeeData); 
@@ -111,47 +138,37 @@ document.addEventListener('DOMContentLoaded', function () {
     $("#save-picture-and-take-another-buttons-container").hide();
     $("#take-picture-button-container").show();
   })
-  $("#load-employee-data-button").click(function(){
-    $.ajax({
-        type: "HEAD",
-        url: "http://manaple.com",
-        error: function(){
-          $("#message").html("No Internet Connectivity Present!<br/> Check your connection and try again.");
-        },
-        success: function(data){  
-          $("#message").html("");
-          $(".page").hide();
-          if (authToken != null){
-            loadEmployeeData(authToken);            
-          }
-          else{
-            $("#login-page").show();
-          }
-          
-        }
-      });
+  $(".load-employee-data-button").click(function(){
+    if (authToken != null){
+      loadEmployeeData(authEmail,authToken);
+    }
+    else{
+      $(".page").hide();
+      $("#login-page").show();
+    }
   });
   $("#sign-in-button").click(function(){
-    var email = $("#email").val();
-    var password = $("#password").val();
+    var email = $("#user-email").val();
+    var password = $("#user-password").val();
     var loginCredentials = {
                             "email":email,
                             "password":password
                             };
     $.ajax({
         type: "POST",
-        url: "http://manaple.com/users/sign_in.json",
-        data:{"email":}
+        url: "http://localhost:3000/users/sign_in.json",
+        data:loginCredentials,
         error: function(){
           $("#message").html("No Internet Connectivity Present!<br/> Check your connection and try again.");
         },
         success: function(data){  
-          authToken = data['authentication_token'];
-          sendAttendanceData(email,authToken);
-          loadEmployeeData(authToken);
+          authToken = data['user']['auth_token'];
+          authEmail = data['user']['email'];
+          sendAttendanceData(authEmail,authToken);
+          loadEmployeeData(authEmail,authToken);
           
           $(".page").hide();
-          $("#take-photo-page").show();
+          $("#already-online-page").show();
         }
       });
   })	
