@@ -19,14 +19,25 @@
 			<div class = "centering-table-cell">
 				<h2><strong>Manaple Offline Attendance Portal</strong></h2>
 				<div id = "attendance-data-stored-message" class="some-space-below">
-					There is Attendance Data Stored Offline.
+					There is Attendance Data Stored Offline.</br>
+					DO NOT CLOSE THIS WINDOW! IT WILL RESULT IN LOSING OF STORED DATA!!</br>
 					<div class="btn btn-default" id="send-data-to-server-button">
 						Send Data to Server
 					</div>
-				</div>
-
+				</div>		
+								
+				<div class="btn btn-default" id="check-internet-connection-button">
+					Check Internet Connection
+				</div>			
+				<div id = "internet-status"></div>
 				<div id = "message"></div>
-				<div id="spinner"></div>
+				<div class = "container">
+					<div class = "centering-table">
+						<div class = "centering-table-cell">
+							<div id="spinner"></div>
+						</div>
+					</div>
+				</div>
 
 				<div class = 'page' id ='take-photo-page'>
 					<form class="form-horizontal" role="form">
