@@ -54,3 +54,13 @@ h1 {
 #attendance-data-stored-message{
   display:none;
 }
+#spinner{
+  width:100%;
+  margin:0 auto;
+  text-align:center;
+  clear:both;
+  margin-top:30px;
+  height:auto;
+  padding:15px;
+  display : none;
+}
