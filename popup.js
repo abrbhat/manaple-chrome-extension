@@ -83,6 +83,29 @@ function loadEmployeeData(authEmail,authToken){
         }
       });      
 }
+function checkForInternet(){
+  $.ajax({
+        type: "HEAD",
+        url: "http://localhost:3000",
+        async:"true",  
+        error: function(){
+          setTimeout(checkForInternet, 5*1000);
+        },
+        success: function(data){  
+          $(".page").hide();
+          $("#already-online-page").show();
+          $("#message").html("");
+          storage.get('attendanceData',function(result){
+            if (result['attendanceData'] != null)
+            {
+              $("#attendance-data-stored-message").show();   
+            }
+          });
+        }
+      });  
+  
+}
+
 function populateSelectNameTag(employeeData){
     var selectName = document.getElementById('select-name');
     selectName.options.length = 0; // clear out existing items
@@ -95,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var authToken,authEmail,attendanceData = {}, employeeId, dataUri, rawImageData, employeeData = {};
   var storage = chrome.storage.local;
   updateAttendanceTimerCount();
+
   var target = document.getElementById("spinner");
   var spinner = new Spinner().spin(target); 
   //employeeData = { '124': 'Jatin', '158': 'Manish', '781': 'Suman' };
@@ -127,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
         error: function(){
           $("#take-photo-page").show();
           $("#take-picture-button-container").show();
+          checkForInternet();
           setWebcam();
           populateSelectNameTag(employeeData);
         },
