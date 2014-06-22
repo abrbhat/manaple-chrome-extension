@@ -11,7 +11,7 @@ function sendAttendanceData(authEmail,authToken) {
     });
     $.ajax({
       type: "POST",
-      url: "http://localhost:3000/api/upload_attendance_data.json",
+      url: "http://manaple.com/api/upload_attendance_data.json",
       headers: { 'x-api-email': authEmail,
                  'x-api-token': authToken },
       async:"true",      
@@ -66,7 +66,7 @@ function updateAttendanceTimerCount()
 function loadEmployeeData(authEmail,authToken){
   $.ajax({
         type: "GET",
-        url: "http://localhost:3000/api/get_employee_data.json",
+        url: "http://manaple.com/api/get_employee_data.json",
         headers: { 'x-api-email': authEmail,
                    'x-api-token': authToken },
         async:"true",  
@@ -86,7 +86,7 @@ function loadEmployeeData(authEmail,authToken){
 function checkForInternet(){
   $.ajax({
         type: "HEAD",
-        url: "http://localhost:3000",
+        url: "http://manaple.com",
         async:"true",  
         error: function(){
           setTimeout(checkForInternet, 5*1000);
@@ -95,7 +95,8 @@ function checkForInternet(){
           $(".page").hide();
           $("#already-online-page").show();
           $("#message").html("");
-          storage.get('attendanceData',function(result){
+          chrome.storage.local.get('attendanceData',function(result){
+            console.log(result['attendanceData']);
             if (result['attendanceData'] != null)
             {
               $("#attendance-data-stored-message").show();   
@@ -146,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
       employeeData = result['employeeData'];        
       $.ajax({
         type: "HEAD",
-        url: "http://localhost:3000",
+        url: "http://manaple.com",
         async:"true",  
         error: function(){
           $("#take-photo-page").show();
@@ -202,10 +203,10 @@ document.addEventListener('DOMContentLoaded', function () {
       {
         var storedAttendanceData = result['attendanceData'];
         storedAttendanceData.push(attendanceData);
-        storage.set(storedAttendanceData); 
+        storage.set({'attendanceData':storedAttendanceData});
       }
-      else{
-        storage.set([attendanceData]);
+      else{        
+        storage.set({'attendanceData':[attendanceData]});
       }
     });   
     $("#save-picture-and-take-another-buttons-container").hide();
@@ -242,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     $.ajax({
         type: "POST",
-        url: "http://localhost:3000/users/sign_in.json",
+        url: "http://manaple.com/users/sign_in.json",
         data:loginCredentials,
         async:"true",  
         error: function(xhr, status, error){
