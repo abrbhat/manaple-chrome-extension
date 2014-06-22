@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var spinner = new Spinner().spin(target); 
   //employeeData = { '124': 'Jatin', '158': 'Manish', '781': 'Suman' };
   //storage.set({'employeeData':employeeData});
+  /*
   attendanceData = [ 
                     {
                       'user_id' : '6',
@@ -114,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                    ];
   storage.set({'attendanceData':attendanceData});
+  */
   storage.get('employeeData',function(result){
     if (result['employeeData'] != null)
     {
