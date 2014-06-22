@@ -81,8 +81,6 @@ function loadEmployeeData(authEmail,authToken){
               $("#employee-list").append(value+"<br/>");
           });
         }
-        beforeSend: function(){
-        }
       });      
 }
 function populateSelectNameTag(employeeData){
