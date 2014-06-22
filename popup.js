@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
           loadEmployeeData(authEmail,authToken);
           $(".page").hide();
           $("#already-online-page").show();
-        }
+        },
         beforeSend: function(){
           $('#message').html("Signing In");
           $("#spinner").show();
