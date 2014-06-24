@@ -17,25 +17,26 @@ function sendAttendanceData(authEmail,authToken) {
       async:"true",      
       data: {"attendance_data":attendanceData},
       error: function(xhr, status, error){
-        $("#spinner").hide();
+        hideSpinner();
         $('#message').html("There was an error during data upload. Please try again later.");
         $("#attendance-data-stored-message").show();
       },
       success: function(data){  
-        $("#spinner").hide();    
+        hideSpinner();    
         $('#message').html("Attendance Data Stored on Server");
         chrome.storage.local.remove('attendanceData');
       },
       beforeSend: function(){
         $("#attendance-data-stored-message").hide();
         $('#message').html("Sending Attendance Data");
-        $("#spinner").show();
+        showSpinner();
       }
     });
   })  
 }
 
 function setWebcam(){
+  $('#webcam').html('');  
   Webcam.set({
     dest_width: 400,
     dest_height: 300,
@@ -45,7 +46,28 @@ function setWebcam(){
   Webcam.attach( '#webcam' );
   Webcam.setSWFLocation("/public/webcam.swf");
 }
-
+function setTakePhotoPage(employeeData){
+  $(".page").hide();
+  $("#take-photo-page").show();
+  setWebcam();
+  showTakePictureButton();  
+  populateSelectNameTag(employeeData);
+}
+function showTakePictureButton(){
+  $("#save-picture-and-take-another-buttons-container").hide();
+  $("#mark-another-attendance-button-container").hide();
+  $("#take-picture-button-container").show();
+}
+function showSavePictureAndTakeAnotherButtonContainer(){
+  $("#take-picture-button-container").hide();
+  $("#mark-another-attendance-button-container").hide();
+  $("#save-picture-and-take-another-buttons-container").show();
+}
+function showMarkAnotherAttendanceButton(){
+  $("#save-picture-and-take-another-buttons-container").hide();
+  $("#take-picture-button-container").hide();
+  $("#mark-another-attendance-button-container").show();
+}
 function updateAttendanceTimerCount()
 { 
   chrome.storage.local.get('attendanceData',function(result){
@@ -75,12 +97,33 @@ function loadEmployeeData(authEmail,authToken){
         success: function(employeeData){
           chrome.storage.local.set({'employeeData':employeeData});
           populateSelectNameTag(employeeData);
-          $("#employee-list").html("");
-          $.each(employeeData, function( key, value ) {
-              $("#employee-list").append(value+"<br/>");
-          });
+          populateEmployeeList(employeeData);
         }
       });      
+}
+function populateEmployeeList(employeeData){
+  $("#employee-list").html("");
+  $.each(employeeData, function( key, value ) {
+      $("#employee-list").append(value+"<br/>");
+  });
+}
+function showLoginPage(){
+  $(".page").hide();
+  $("#login-page").show();
+}
+function showAlreadyOnlinePage(){
+  $(".page").hide();
+  $("#already-online-page").show();
+}
+function showNoEmployeeDataPage(){
+  $(".page").hide();
+  $("#no-employee-data-page").show();
+}
+function showSpinner(){
+  $("#spinner").show();
+}
+function hideSpinner(){
+  $("#spinner").hide();
 }
 function checkForInternet(loop){
   $.ajax({
@@ -90,21 +133,19 @@ function checkForInternet(loop){
         error: function(){
           $("#internet-status").html("Status: Offline");
           if (loop == 'false'){ 
-            $("#spinner").hide();           
-            $(".page").hide();
-            $("#take-photo-page").show();
+            hideSpinner();           
+            setTakePhotoPage();
           }
           else{
             setTimeout(checkForInternet, 5*1000);
           }
         },
         success: function(data){  
-          $(".page").hide();
-          $("#already-online-page").show();
+          showAlreadyOnlinePage();
           $("#message").html("");
           $("#internet-status").html("Status: Online");
           if (loop == 'false'){            
-            $("#spinner").hide();
+            hideSpinner();
           } 
           chrome.storage.local.get('attendanceData',function(result){
             if (result['attendanceData'] != null)
@@ -116,32 +157,47 @@ function checkForInternet(loop){
             if (result['employeeData'] != null)
             {
               employeeData = result['employeeData']; 
-              $("#employee-list").html("");       
-              $.each(employeeData, function( key, value ) {
-                $("#employee-list").append(value+"<br/>");
-              });  
+              populateEmployeeList(employeeData);
             }
             else{
-              $("#no-employee-data-page").show();
+              showNoEmployeeDataPage();
             }
           });
         },
         beforeSend: function(){
           if (loop == 'false'){
             $('#internet-status').html("Status: Checking");
-            $("#spinner").show();
+            showSpinner();
           }          
         }
       });    
 }
 
 function populateSelectNameTag(employeeData){
-    var selectName = document.getElementById('select-name');
-    selectName.options.length = 0; // clear out existing items
-    for (var userId in employeeData) {
-      var employeeName = employeeData[userId];    
-      selectName.options.add(new Option(employeeName, userId));  
-    };
+    if (employeeData != null){
+      populateSelectTag('select-name',employeeData); 
+    }
+    else {
+      chrome.storage.local.get('employeeData',function(result){
+        if (result['employeeData'] != null)
+        {
+          employeeData = result['employeeData']; 
+          populateSelectTag('select-name',employeeData);           
+        }
+        else{
+          showNoEmployeeDataPage();
+        }
+      });
+    }    
+}
+
+function populateSelectTag(tagId,data){
+  var selectTag = document.getElementById(tagId);
+  selectTag.options.length = 0; // clear out existing items
+  for (var itemId in data) {
+    var itemName = data[itemId];    
+    selectTag.options.add(new Option(itemName, itemId));  
+  };   
 }
 document.addEventListener('DOMContentLoaded', function () {
   var authToken,authEmail,attendanceData = {}, employeeId, dataUri, rawImageData, employeeData = {};
@@ -159,19 +215,13 @@ document.addEventListener('DOMContentLoaded', function () {
         url: "http://manaple.com",
         async:"true",  
         error: function(){
-          $("#take-photo-page").show();
-          $("#take-picture-button-container").show();
+          setTakePhotoPage(employeeData);
           checkForInternet('true');
-          setWebcam();
-          populateSelectNameTag(employeeData);
         },
         success: function(data){  
           $(".page").hide();
           $("#already-online-page").show();
-          $("#employee-list").html("");
-          $.each(employeeData, function( key, value ) {
-              $("#employee-list").append(value+"<br/>");
-          });
+         populateEmployeeList(employeeData);
         }
       });      
     }
@@ -187,8 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   
     $("#take-picture-button").click(function(){    
-      $("#take-picture-button-container").hide();
-      $("#save-picture-and-take-another-buttons-container").show();
+      showSavePictureAndTakeAnotherButtonContainer();
       var selectName = document.getElementById('select-name');
       employeeId = selectName.options[selectName.selectedIndex].value;
       var description = "";
@@ -220,20 +269,13 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       $("#attendance-data-stored-message").show();  
     });   
-    $("#save-picture-and-take-another-buttons-container").hide();
-    $("#mark-another-attendance-button-container").show();
+    showMarkAnotherAttendanceButton();
   });
   $("#mark-another-attendance-button").click(function(){
-    $('#webcam').html('');  
-    setWebcam();
-    $("#mark-another-attendance-button-container").hide();
-    $("#take-picture-button-container").show();
+    setTakePhotoPage();
   });
   $("#take-another-picture-button").click(function(){
-    $('#webcam').html('');  
-    setWebcam();
-    $("#save-picture-and-take-another-buttons-container").hide();
-    $("#take-picture-button-container").show();
+    setTakePhotoPage();
   })
   $("#check-internet-connection-button").click(function(){
     checkForInternet('false');
@@ -243,8 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
       loadEmployeeData(authEmail,authToken);
     }
     else{
-      $(".page").hide();
-      $("#login-page").show();
+      showLoginPage();
     }
   });
   $("#sign-in-button").click(function(){
@@ -262,36 +303,28 @@ document.addEventListener('DOMContentLoaded', function () {
         async:"true",  
         error: function(xhr, status, error){
           $('#message').html("");
-          $("#spinner").hide();
+          hideSpinner();
           if (xhr.status == 401){
             $("#message").html("Incorrect username or password");
           }
           else{
             $("#message").html("No Internet Connectivity Present!<br/> Check your connection and try again.");
-            $(".page").hide();
-            $("#take-photo-page").show();
-            $("#take-picture-button-container").show();
-            $("#save-picture-and-take-another-buttons-container").hide();
-            $("#mark-another-attendance-button-container").hide();
-            $('#webcam').html('');
-            setWebcam();
-            populateSelectNameTag(employeeData);
+            setTakePhotoPage(employeeData);
           }
         },
         success: function(data){  
           $('#message').html("");
-          $("#spinner").hide();
+          hideSpinner();
           authToken = data['user']['auth_token'];
           authEmail = data['user']['email'];
 
           sendAttendanceData(authEmail,authToken);
           loadEmployeeData(authEmail,authToken);
-          $(".page").hide();
-          $("#already-online-page").show();
+          showAlreadyOnlinePage();
         },
         beforeSend: function(){
           $('#message').html("Signing In");
-          $("#spinner").show();
+          showSpinner();
         }
       });
   })	
@@ -299,11 +332,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (authToken != null){
       sendAttendanceData(email,authToken);
     }
-    else{
-      $(".page").hide();      
+    else{           
       $("#attendance-data-stored-message").hide();
       $("#message").html("");
-      $("#login-page").show();
+      showLoginPage();
     }
   });
 });
