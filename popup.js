@@ -219,14 +219,13 @@ document.addEventListener('DOMContentLoaded', function () {
           checkForInternet('true');
         },
         success: function(data){  
-          $(".page").hide();
-          $("#already-online-page").show();
-         populateEmployeeList(employeeData);
+          showAlreadyOnlinePage();
+          populateEmployeeList(employeeData);
         }
       });      
     }
     else{
-      $("#no-employee-data-page").show();
+      showNoEmployeeDataPage();
     }
   });
   storage.get('attendanceData',function(result){
