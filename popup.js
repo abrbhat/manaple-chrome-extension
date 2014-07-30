@@ -11,7 +11,7 @@ function sendAttendanceData(authEmail,authToken) {
     });
     $.ajax({
       type: "POST",
-      url: "http://manaple.com/api/upload_attendance_data.json",
+      url: "http://www.manaple.com/api/upload_attendance_data.json",
       headers: { 'x-api-email': authEmail,
                  'x-api-token': authToken },
       async:"true",      
@@ -87,7 +87,7 @@ function updateAttendanceTimerCount()
 function loadEmployeeData(authEmail,authToken){
   $.ajax({
         type: "GET",
-        url: "http://manaple.com/api/get_employee_data.json",
+        url: "http://www.manaple.com/api/get_employee_data.json",
         headers: { 'x-api-email': authEmail,
                    'x-api-token': authToken },
         async:"true",  
@@ -111,10 +111,6 @@ function showLoginPage(){
   $(".page").hide();
   $("#login-page").show();
 }
-function showAlreadyOnlinePage(){
-  $(".page").hide();
-  $("#already-online-page").show();
-}
 function showNoEmployeeDataPage(){
   $(".page").hide();
   $("#no-employee-data-page").show();
@@ -128,7 +124,7 @@ function hideSpinner(){
 function checkForInternet(loop){
   $.ajax({
         type: "HEAD",
-        url: "http://manaple.com",
+        url: "http://www.manaple.com",
         async:"true",  
         error: function(){
           $("#internet-status").html("Status: Offline");
@@ -141,7 +137,7 @@ function checkForInternet(loop){
           }
         },
         success: function(data){  
-          showAlreadyOnlinePage();
+          setTakePhotoPage();
           $("#message").html("");
           $("#internet-status").html("Status: Online");
           if (loop == 'false'){            
@@ -212,14 +208,14 @@ document.addEventListener('DOMContentLoaded', function () {
       employeeData = result['employeeData'];        
       $.ajax({
         type: "HEAD",
-        url: "http://manaple.com",
+        url: "http://www.manaple.com",
         async:"true",  
         error: function(){
           setTakePhotoPage(employeeData);
           checkForInternet('true');
         },
         success: function(data){  
-          showAlreadyOnlinePage();
+          setTakePhotoPage(employeeData);
           populateEmployeeList(employeeData);
         }
       });      
@@ -262,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var storedAttendanceData = result['attendanceData'];
         storedAttendanceData.push(attendanceData);
         storage.set({'attendanceData':storedAttendanceData});
+        console.log(storedAttendanceData);
       }
       else{        
         storage.set({'attendanceData':[attendanceData]});
@@ -297,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     $.ajax({
         type: "POST",
-        url: "http://manaple.com/users/sign_in.json",
+        url: "http://www.manaple.com/users/sign_in.json",
         data:loginCredentials,
         async:"true",  
         error: function(xhr, status, error){
@@ -319,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
           sendAttendanceData(authEmail,authToken);
           loadEmployeeData(authEmail,authToken);
-          showAlreadyOnlinePage();
+          setTakePhotoPage(employeeData);
         },
         beforeSend: function(){
           $('#message').html("Signing In");
@@ -329,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
   })	
   $("#send-data-to-server-button").click(function(){
     if (authToken != null){
-      sendAttendanceData(email,authToken);
+      sendAttendanceData(authEmail,authToken);
     }
     else{           
       $("#attendance-data-stored-message").hide();
