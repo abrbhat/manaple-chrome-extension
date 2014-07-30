@@ -4,6 +4,7 @@ html {
 body {
   background-color: #eee !important;
   height:100%;
+  overflow: scroll;
 }
 
 h1 {
@@ -57,4 +58,18 @@ h1 {
   height:auto;
   padding:15px;
   display : none;
+}
+#stored-data-table{
+  margin: 0 auto;
+  margin-bottom: 5px;
+}
+#stored-data{
+  display:none;
+}
+#view-stored-data-button{
+  clear:both;  
+  margin-bottom: 5px;
+}
+.hidden-element{
+  display:none;
 }

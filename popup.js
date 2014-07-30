@@ -25,6 +25,7 @@ function sendAttendanceData(authEmail,authToken) {
         hideSpinner();    
         $('#message').html("Attendance Data Stored on Server");
         chrome.storage.local.remove('attendanceData');
+        $("#stored-data-table-body").html("");
       },
       beforeSend: function(){
         $("#attendance-data-stored-message").hide();
@@ -120,6 +121,14 @@ function showSpinner(){
 }
 function hideSpinner(){
   $("#spinner").hide();
+}
+function addAttendanceDataInStoredDataView(attendanceData){
+  rawImageData = attendanceData['photo_data'].replace(/^data\:image\/\w+\;base64\,/, ''); 
+  var html = "<tr><td>"+attendanceData['employee_name'] + "</td>";
+  html += '<td><img src="'+attendanceData['photo_data']+'" height="75" width="100"></img></td>';  
+  html += '<td>'+attendanceData['description']+'</td>'; 
+  html += '</tr>';
+  $("#stored-data-table-body").append(html);
 }
 function checkForInternet(loop){
   $.ajax({
@@ -229,12 +238,18 @@ document.addEventListener('DOMContentLoaded', function () {
       {
         $("#attendance-data-stored-message").show();   
       }
+      var attendanceData = result['attendanceData'];     
+      $.each(attendanceData, function( index, data ) {
+        addAttendanceDataInStoredDataView(data);        
+      });
   });
+    
   
     $("#take-picture-button").click(function(){    
       showSavePictureAndTakeAnotherButtonContainer();
       var selectName = document.getElementById('select-name');
       employeeId = selectName.options[selectName.selectedIndex].value;
+      employeeName = selectName.options[selectName.selectedIndex].text;
       var description = "";
       var selectedDescription = $("input[type='radio'][name='attendance_description']:checked");
       if (selectedDescription.length > 0) {
@@ -247,6 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
       attendanceData = {
                       'user_id' : employeeId,
                       'photo_data' : dataUri,
+                      'employee_name':employeeName,
                       'count' : '0',
                       'description' : description
                        };
@@ -258,13 +274,13 @@ document.addEventListener('DOMContentLoaded', function () {
         var storedAttendanceData = result['attendanceData'];
         storedAttendanceData.push(attendanceData);
         storage.set({'attendanceData':storedAttendanceData});
-        console.log(storedAttendanceData);
       }
       else{        
         storage.set({'attendanceData':[attendanceData]});
       }
       $("#attendance-data-stored-message").show();  
     });   
+    addAttendanceDataInStoredDataView(attendanceData);
     showMarkAnotherAttendanceButton();
   });
   $("#mark-another-attendance-button").click(function(){
@@ -313,7 +329,6 @@ document.addEventListener('DOMContentLoaded', function () {
           hideSpinner();
           authToken = data['user']['auth_token'];
           authEmail = data['user']['email'];
-
           sendAttendanceData(authEmail,authToken);
           loadEmployeeData(authEmail,authToken);
           setTakePhotoPage(employeeData);
@@ -328,10 +343,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (authToken != null){
       sendAttendanceData(authEmail,authToken);
     }
-    else{           
-      $("#attendance-data-stored-message").hide();
+    else{   
       $("#message").html("");
       showLoginPage();
     }
   });
+  $("#view-stored-data-button").click(function(){
+    $("#show-stored-data-message").toggle();
+    $("#hide-stored-data-message").toggle();
+    $("#stored-data").toggle();
+  })
 });

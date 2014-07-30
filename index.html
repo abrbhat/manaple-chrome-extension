@@ -14,13 +14,31 @@
     <script src="spinner.js"></script>
 </head>
 <body>
-	<div class= "container">
+	<div class= "container" id="main-div">
 		<div class = "centering-table">
 			<div class = "centering-table-cell">
 				<h2><strong>Manaple Offline Attendance Portal</strong></h2>
 				<div id = "attendance-data-stored-message" class="some-space-below">
 					There is Attendance Data Stored Offline.</br>
 					DO NOT CLOSE THIS WINDOW! IT WILL RESULT IN LOSING OF STORED DATA!!</br>
+					<div class="btn btn-default" id="view-stored-data-button">
+						<span id="show-stored-data-message">Show</span>
+						<span id="hide-stored-data-message" class="hidden-element">Hide</span> Stored Data
+					</div>
+					<div id = "stored-data">
+						<table id = "stored-data-table" class="table">
+							<thead>
+								<tr>
+									<td>Name</td>
+									<td>Photo</td>
+									<td>Description</td>
+								</tr>
+							</thead>
+							<tbody id="stored-data-table-body">
+							</tbody>
+						</table>
+					</div>
+					<br>
 					<div class="btn btn-default" id="send-data-to-server-button">
 						Send Data to Server
 					</div>
