@@ -1,8 +1,69 @@
+function signIn(email,password){
+  if ((email == null) || (password == null)){    
+    chrome.storage.local.get('authData',function(result){      
+      if (result['authData'] != null)
+      {        
+        authData = result['authData'];  
+        storedEmail = authData['email'];
+        storedPassword = authData['password'];
+        if ((storedEmail != null) && (storedPassword!=null)){
+          signIn(storedEmail,storedPassword);           
+        }
+        else{          
+          chrome.storage.local.remove('authData');
+          signIn();
+        }        
+      }
+      else{        
+        showSignInForm();
+      }
+    });
+  }
+  else{    
+    var loginCredentials = {
+                              "email":email,
+                              "password":password
+                           };
+    $.ajax({
+          type: "POST",
+          url: "http://www.manaple.com/users/sign_in.json",
+          data:loginCredentials,
+          async:"true",  
+          error: function(xhr, status, error){
+            hideSpinner();
+            if (xhr.status == 401){
+              setNetStatusAs('Online');
+              showIncorrectAuthError();     
+              chrome.storage.local.remove('authData');       
+            }
+            else{
+              setNetStatusAs('Offline');
+              clearAllMessages();
+              showNoNetConnectivityError();
+              hideSignInForm();
+            }
+          },
+          success: function(data){  
+            hideSpinner();
+            hideSignInForm();
+            authToken = data['user']['auth_token'];
+            authEmail = data['user']['email'];            
+            loadEmployeeData(authEmail,authToken);
+            sendAttendanceData(authEmail,authToken);
+          },
+          beforeSend: function(){
+            showSigningInMessage();
+            showSpinner();
+          }
+      });
+  }
+}
 function sendAttendanceData(authEmail,authToken) {
   var attendanceData = {};
   chrome.storage.local.get('attendanceData',function(result){
     attendanceData = result['attendanceData'];     
     if (attendanceData == null){
+      clearAllMessages();
       return;
     }
     $.each(attendanceData, function( index, data ) {
@@ -23,10 +84,9 @@ function sendAttendanceData(authEmail,authToken) {
       },
       success: function(data){  
         hideSpinner();    
-        clearAllErrors();
-        clearAllInfoNotices();
-        hideSignInForm();
-        $('#notice-success').html("Attendance Data Stored on Server");
+        clearAllMessages();
+        hideAttendanceDataStoredOfflineMessage();
+        showDataUploadSuccessfulMessage();
         chrome.storage.local.remove('attendanceData');
         $("#stored-data-table-body").html("");
       },
@@ -38,7 +98,32 @@ function sendAttendanceData(authEmail,authToken) {
     });
   });  
 }
+function loadEmployeeData(authEmail,authToken){
+  $.ajax({
+        type: "GET",
+        url: "http://www.manaple.com/api/get_employee_data.json",
+        headers: { 'x-api-email': authEmail,
+                   'x-api-token': authToken },
+        async:"true",  
+        error: function(){
+          showEmployeeDataLoadError();
+          setNetStatusAs('offline');
+        },
+        success: function(employeeData){
+          chrome.storage.local.set({'employeeData':employeeData});
+          populateSelectNameTag(employeeData);
+          populateEmployeeList(employeeData);
+          setNetStatusAs('Online');
+          hideNoEmployeeDataOfflineError();
+          clearAllErrors();
+          clearAllInfoNotices();
+        }
+      });      
+}
 
+function setAuthDataInLocalStorage(email,password){
+  chrome.storage.local.set({'authData':{'email':email,'password':password}});
+}
 function setWebcam(){
   $('#webcam').html('');  
   Webcam.set({
@@ -87,25 +172,7 @@ function updateAttendanceTimerCount()
   setTimeout(updateAttendanceTimerCount, 10*1000);
 } 
  
-function loadEmployeeData(authEmail,authToken){
-  $.ajax({
-        type: "GET",
-        url: "http://www.manaple.com/api/get_employee_data.json",
-        headers: { 'x-api-email': authEmail,
-                   'x-api-token': authToken },
-        async:"true",  
-        error: function(){
-          $("#message").html("Could not get employee data from server");
-          setNetStatusAs('offline');
-        },
-        success: function(employeeData){
-          chrome.storage.local.set({'employeeData':employeeData});
-          populateSelectNameTag(employeeData);
-          populateEmployeeList(employeeData);
-          setNetStatusAs('online');
-        }
-      });      
-}
+
 function setNetStatusAs(status){
   $('#net-status').html(status);
 }
@@ -116,7 +183,7 @@ function showAttendanceDataStoredMessage(){
   $('#attendance-data-stored-message').show();
   setAttendanceDataStoredStatusAs('Yes');
 }
-function hideAttendanceDataStoredMessage(){
+function hideAttendanceDataStoredOfflineMessage(){
   $('#attendance-data-stored-message').hide();
   setAttendanceDataStoredStatusAs('No');
 }
@@ -132,9 +199,6 @@ function showSignInForm(){
 function hideSignInForm(){
   $("#sign-in-form").hide();
 }
-function showNoEmployeeDataError(){
-  $("#no-employee-data-offline-error").show();
-}
 function showSpinner(){
   $("#spinner").show();
 }
@@ -142,16 +206,24 @@ function hideSpinner(){
   $("#spinner").hide();
 }
 function showIncorrectAuthError(){
+  clearAllMessages();
   $('#error-message').html("Incorrect Username/Password");
 }
 function showNoNetConnectivityError(){
+  clearAllMessages();
   $('#error-message').html("No Net Connectivity Present. Please try again later.");
 }
 function showEmployeeDataLoadError(){
+  clearAllMessages();
   $('#error-message').html("There was an error in downloading Employee Data");
 }
 function showNoEmployeeDataOfflineError(){
+  $("#take-photo-container").hide();
   $("#no-employee-data-offline-error").show();
+}
+function hideNoEmployeeDataOfflineError(){
+  setTakePhotoContainer();
+  $("#no-employee-data-offline-error").hide();
 }
 function clearAllErrors(){
   $('#error-message').html('');
@@ -159,16 +231,31 @@ function clearAllErrors(){
 function clearAllInfoNotices(){
   $('#notice-info').html('');
 }
+function clearAllSuccessNotices(){
+  $('#notice-success').html('');
+}
+function clearAllMessages(){
+  clearAllErrors();
+  clearAllInfoNotices();
+  clearAllSuccessNotices();
+}
 function showSigningInMessage(){
+  clearAllMessages();
   $('#notice-info').html('Signing In');
 }
+function showDataUploadSuccessfulMessage(){
+  $('#notice-success').html('Attendance Data was successfully stored on server.');
+}
 function showErrorDuringDataUploadMessage(){
+  clearAllMessages();
   $('#error-message').html("There was an error during data upload. Please try again later.");
 }
 function setNoticeAskingForSignInToGetEmployeeData(){
+  clearAllMessages();
   $('#notice-info').html('Sign In to download employee data');
 }
 function setNoticeAskingForSignInToSendDataToServer(){
+  clearAllMessages();
   $('#notice-info').html('Sign In to send data to server');
 }
 function addAttendanceDataInStoredDataView(attendanceData){
@@ -202,8 +289,8 @@ function checkForInternet(loop){
           chrome.storage.local.get('attendanceData',function(result){
             if (result['attendanceData'] != null)
             {
-              $("#attendance-data-stored-message").show();   
-              $('#attendance-data-stored-status').html('Yes');
+              showAttendanceDataStoredMessage();
+              signIn();
             }
           });
           chrome.storage.local.get('employeeData',function(result){
@@ -213,7 +300,7 @@ function checkForInternet(loop){
               populateEmployeeList(employeeData);
             }
             else{
-              showNoEmployeeDataError();
+              signIn();
             }
           });
         },
@@ -253,12 +340,24 @@ function populateSelectTag(tagId,data){
   };   
 }
 document.addEventListener('DOMContentLoaded', function (){
-  var authToken,authEmail,attendanceData = {}, employeeId, dataUri, rawImageData, employeeData = {};
+  var authToken,authEmail,authPassword,attendanceData = {}, employeeId, dataUri, rawImageData, employeeData = {};
+  var storedEmail, storedPassword;
   var storage = chrome.storage.local;
   updateAttendanceTimerCount();  
   checkForInternet('true');
   var target = document.getElementById("spinner");
   var spinner = new Spinner().spin(target); 
+  storage.get('authData',function(result){
+    if (result['authData'] != null)
+    {
+      authData = result['authData'];  
+      storedEmail = authData['email'];
+      storedPassword = authData['password'];
+    }
+    else{
+      showSignInForm();
+    }
+  });
   storage.get('employeeData',function(result){
     if (result['employeeData'] != null)
     {
@@ -273,14 +372,14 @@ document.addEventListener('DOMContentLoaded', function (){
   storage.get('attendanceData',function(result){
       if (result['attendanceData'] != null)
       {
-        $("#attendance-data-stored-message").show();   
-        // Todo - Initiate sending stored data
-      }
-      var attendanceData = result['attendanceData'];     
-      $.each(attendanceData, function( index, data ) {
-        addAttendanceDataInStoredDataView(data);        
-      });
+        showAttendanceDataStoredMessage();  
+        var attendanceData = result['attendanceData'];     
+        $.each(attendanceData, function( index, data ) {
+          addAttendanceDataInStoredDataView(data);        
+        });
+      }      
   });  
+  
   $("#take-picture-button").click(function(){    
     showSavePictureAndTakeAnotherButtonContainer();
     var selectName = document.getElementById('select-name');
@@ -319,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function (){
     });   
     addAttendanceDataInStoredDataView(attendanceData);
     showMarkAnotherAttendanceButton();
+    signIn();
   });
   $("#mark-another-attendance-button").click(function(){
     setTakePhotoContainer();
@@ -340,39 +440,9 @@ document.addEventListener('DOMContentLoaded', function (){
   });
   $("#sign-in-button").click(function(){
     var email = $("#user-email").val();
-    var password = $("#user-password").val();
-    var loginCredentials = {
-                              "email":email,
-                              "password":password
-                            };
-    $.ajax({
-        type: "POST",
-        url: "http://www.manaple.com/users/sign_in.json",
-        data:loginCredentials,
-        async:"true",  
-        error: function(xhr, status, error){
-          hideSpinner();
-          if (xhr.status == 401){
-            setNetStatusAs('Online');
-            showIncorrectAuthError();
-          }
-          else{
-            setNetStatusAs('Offline');
-            showNoNetConnectivityError();
-          }
-        },
-        success: function(data){  
-          hideSpinner();
-          authToken = data['user']['auth_token'];
-          authEmail = data['user']['email'];
-          sendAttendanceData(authEmail,authToken);
-          loadEmployeeData(authEmail,authToken);
-        },
-        beforeSend: function(){
-          showSigningInMessage();
-          showSpinner();
-        }
-    });
+    var password = $("#user-password").val(); 
+    setAuthDataInLocalStorage(email,password);    
+    signIn(email,password);
   });	
   $("#send-data-to-server-button").click(function(){
     if (authToken != null){
