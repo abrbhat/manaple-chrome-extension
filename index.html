@@ -17,15 +17,53 @@
 	<div class= "container" id="main-div">
 		<div class = "centering-table">
 			<div class = "centering-table-cell">
-				<h2><strong>Manaple Offline Attendance Portal</strong></h2>
-				<div id = "attendance-data-stored-message" class="some-space-below">
-					There is Attendance Data Stored Offline.</br>
-					DO NOT CLOSE THIS WINDOW! IT WILL RESULT IN LOSING OF STORED DATA!!</br>
-					<div class="btn btn-default" id="view-stored-data-button">
-						<span id="show-stored-data-message">Show</span>
-						<span id="hide-stored-data-message" class="hidden-element">Hide</span> Stored Data
+				<h3><strong>Manaple Offline Attendance Portal</strong></h3>
+				<div class = 'row'>
+					<div class = 'col-md-5'>
+						<div id = 'attendance-data-stored-status-container'>
+							Attendance Data Stored:<span id = 'attendance-data-stored-status'>No</span>
+						</div>
+					</div>					
+					<div class = 'col-md-3 col-md-offset-4' id = 'net-status-container'>						
+						Net Status:<span id = 'net-status'></span>
+						<div class="btn btn-primary" id="check-internet-connection-button">
+							Refresh
+						</div>
 					</div>
-					<div id = "stored-data">
+				</div>
+				<div class = 'hidden-element' id = 'no-employee-data-offline-error'>
+						No Employee Data Found Offline
+						<input type="button" id="" class="btn btn-primary load-employee-data-button" value="Load Data (Internet Connectivity is Required)"></input>
+				</div>
+				<div id = 'error-message-container'>					
+					<div id = 'error-message'></div>
+				</div>
+				<div id = 'notice-info-container'>					
+					<div id = 'notice-info'></div>
+				</div>	
+				<div id = 'notice-success-container'>					
+					<div id = 'notice-success'></div>
+				</div>
+				<div class = 'container'>											
+					<div id = "attendance-data-stored-message" class="central-module">
+						DO NOT CLOSE THIS WINDOW! IT WILL RESULT IN LOSING OF STORED DATA!!</br>
+						<div class = "btn btn-primary" id="view-stored-data-button">
+							<span id="show-stored-data-message">Show</span>
+							<span id="hide-stored-data-message" class="hidden-element">Hide</span> 
+							Stored Data
+						</div>
+						<div class="btn btn-primary" id="send-data-to-server-button">
+							Send Data to Server
+						</div>
+					</div>
+					<div class = "container central-module">
+						<div class = "centering-table">
+							<div class = "centering-table-cell">
+								<div id="spinner"></div>
+							</div>
+						</div>
+					</div>	
+					<div id = "stored-data" class = 'central-module hidden-element'>
 						<table id = "stored-data-table" class="table">
 							<thead>
 								<tr>
@@ -37,27 +75,24 @@
 							<tbody id="stored-data-table-body">
 							</tbody>
 						</table>
-					</div>
-					<br>
-					<div class="btn btn-default" id="send-data-to-server-button">
-						Send Data to Server
-					</div>
-				</div>		
-								
-				<div class="btn btn-default" id="check-internet-connection-button">
-					Check Internet Connection
-				</div>			
-				<div id = "internet-status"></div>
-				<div id = "message"></div>
-				<div class = "container">
-					<div class = "centering-table">
-						<div class = "centering-table-cell">
-							<div id="spinner"></div>
-						</div>
-					</div>
+					</div>									
 				</div>
-
-				<div class = 'page' id ='take-photo-page'>
+					
+				<div class = 'hidden-element' id = 'sign-in-form'>
+					<form class="form-inline" role="form">
+					  <div class="form-group input-inline">
+					    <div class="input-group">
+					      <input type="email" class="form-control" id="user-email" placeholder="Enter email">
+					    </div>
+					  </div>
+					  <div class="form-group input-inline">
+					    <input type="password" class="form-control" id="user-password" placeholder="Password">
+					  </div>
+					  <button type="submit" class="btn btn-primary" id = 'sign-in-button'>Sign in</button>
+					</form>
+				</div>
+				<hr>
+				<div id ='take-photo-container'>
 					<form class="form-horizontal" role="form">
 						<div class="form-group">
 							<label for="select-name" class="col-sm-2 control-label">Select Name:</label>
@@ -77,56 +112,16 @@
 					<div id="webcam"></div>
 					<div class="button-bar">
 						<div id="take-picture-button-container" class='photo-control'>
-							<input type="button" id="take-picture-button" class="btn btn-default" value="Take Picture"></input>
+							<input type="button" id="take-picture-button" class="btn btn-primary" value="Take Picture"></input>
 						</div>
 						<div id ="save-picture-and-take-another-buttons-container" class='photo-control'>
-				        	<input type="button" id="save-picture-button" class="btn btn-default" value="Save Offline"></input>
-				        	<input type="button" id="take-another-picture-button" class="btn btn-default" value="Take Another"></input>
+				        	<input type="button" id="save-picture-button" class="btn btn-primary" value="Save Offline"></input>
+				        	<input type="button" id="take-another-picture-button" class="btn btn-primary" value="Take Another"></input>
 				        </div>
 				        <div id="mark-another-attendance-button-container" class='photo-control'>
-							<input type="button" id="mark-another-attendance-button" class="btn btn-default" value="Mark Another Attendance"></input>
+							<input type="button" id="mark-another-attendance-button" class="btn btn-primary" value="Mark Another Attendance"></input>
 						</div>
 					</div>
-				</div>
-
-				<div class = 'page' id ='no-employee-data-page'>
-					<h3>No Employee Data Found Offline!</h3>
-					<input type="button" id="" class="btn btn-default load-employee-data-button" value="Load Data (Internet Connectivity is Required)"></input>					
-				</div>
-
-				<div class= 'page' id='already-online-page'>
-					<h3>You are connected to internet. </h3>
-					<h3>This portal is only for offline attendance.</h3>
-					<h3><a href="http://manaple.com" class="btn btn-default" target="_blank">Mark Attendance Online</a></h3>
-					</hr>
-					Employee List:</br>
-					<div id = "employee-data-update-container container">
-						<div id="employee-list">
-						</div>
-						<div class="btn btn-default load-employee-data-button" id="">
-							Reload Employee Data From Server
-						</div>
-					</div>
-				</div>
-
-				<div class = 'page' id ='login-page'>
-					<div class="sign-in-block">
-						<form class="form-horizontal" role="form">
-							<div class="form-group">
-							    <label for="user-email" class="control-label col-sm-5">Email</label>
-							    <div class="col-sm-5">
-							    	<input type="email" class="form-control" id="user-email" placeholder="Enter email" name="user_email">
-								</div>  
-							</div>
-							<div class="form-group">
-							    <label for="user-password" class="control-label col-sm-5">Password</label>
-							    <div class="col-sm-5">
-							    	<input type="password" class="form-control" id="user-password" placeholder="Enter Password" name="user_password">
-							    </div>
-							</div>									
-						  	<input type="submit" class="btn btn-default" id="sign-in-button" value="Sign In"></input>					
-						</form>
-					</div>			
 				</div>
 			</div>
 	    </div>

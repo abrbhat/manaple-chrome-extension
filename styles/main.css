@@ -5,6 +5,8 @@ body {
   background-color: #eee !important;
   height:100%;
   overflow: scroll;
+  min-width: 900px;
+  min-height: 700px
 }
 
 h1 {
@@ -37,9 +39,6 @@ h1 {
   margin-top:20px;
   margin-bottom:10px;
 }
-.page{
-  display:none;
-}
 .some-space-below{
   margin-bottom: 7px;
 }
@@ -64,12 +63,26 @@ h1 {
   margin-bottom: 5px;
 }
 #stored-data{
-  display:none;
+  
 }
 #view-stored-data-button{
-  clear:both;  
-  margin-bottom: 5px;
 }
 .hidden-element{
   display:none;
+}
+#error-message-container{
+  background-color: red;
+}
+#notice-info-container{
+  background-color: blue;
+}
+#notice-success-container{
+  background-color: green;
+}
+.input-inline{
+  width: 30%;
+}
+#sign-in-form{
+  width: 700px;
+  margin: 0 auto;
 }

@@ -8,8 +8,8 @@ chrome.app.runtime.onLaunched.addListener(function() {
   // Center window on screen.
   var screenWidth = screen.availWidth;
   var screenHeight = screen.availHeight;
-  var width = 700;
-  var height = 600;
+  var width = 1200;
+  var height = 900;
   chrome.app.window.create('index.html', function(win) {
     win.onClosed.addListener(function() {
       chrome.storage.local.remove('attendanceData');

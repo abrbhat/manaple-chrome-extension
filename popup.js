@@ -3,7 +3,7 @@ function sendAttendanceData(authEmail,authToken) {
   chrome.storage.local.get('attendanceData',function(result){
     attendanceData = result['attendanceData'];     
     if (attendanceData == null){
-      return
+      return;
     }
     $.each(attendanceData, function( index, data ) {
       rawImageData = data['photo_data'].replace(/^data\:image\/\w+\;base64\,/, '');                
@@ -18,22 +18,25 @@ function sendAttendanceData(authEmail,authToken) {
       data: {"attendance_data":attendanceData},
       error: function(xhr, status, error){
         hideSpinner();
-        $('#message').html("There was an error during data upload. Please try again later.");
-        $("#attendance-data-stored-message").show();
+        showErrorDuringDataUploadMessage();
+        showAttendanceDataStoredMessage();
       },
       success: function(data){  
         hideSpinner();    
-        $('#message').html("Attendance Data Stored on Server");
+        clearAllErrors();
+        clearAllInfoNotices();
+        hideSignInForm();
+        $('#notice-success').html("Attendance Data Stored on Server");
         chrome.storage.local.remove('attendanceData');
         $("#stored-data-table-body").html("");
       },
       beforeSend: function(){
         $("#attendance-data-stored-message").hide();
-        $('#message').html("Sending Attendance Data");
+        $('#notice-info').html("Sending Attendance Data");
         showSpinner();
       }
     });
-  })  
+  });  
 }
 
 function setWebcam(){
@@ -47,9 +50,8 @@ function setWebcam(){
   Webcam.attach( '#webcam' );
   Webcam.setSWFLocation("/public/webcam.swf");
 }
-function setTakePhotoPage(employeeData){
-  $(".page").hide();
-  $("#take-photo-page").show();
+function setTakePhotoContainer(employeeData){
+  $("#take-photo-container").show();
   setWebcam();
   showTakePictureButton();  
   populateSelectNameTag(employeeData);
@@ -94,13 +96,29 @@ function loadEmployeeData(authEmail,authToken){
         async:"true",  
         error: function(){
           $("#message").html("Could not get employee data from server");
+          setNetStatusAs('offline');
         },
         success: function(employeeData){
           chrome.storage.local.set({'employeeData':employeeData});
           populateSelectNameTag(employeeData);
           populateEmployeeList(employeeData);
+          setNetStatusAs('online');
         }
       });      
+}
+function setNetStatusAs(status){
+  $('#net-status').html(status);
+}
+function setAttendanceDataStoredStatusAs(status){
+  $('#attendance-data-stored-status').html(status);
+}
+function showAttendanceDataStoredMessage(){
+  $('#attendance-data-stored-message').show();
+  setAttendanceDataStoredStatusAs('Yes');
+}
+function hideAttendanceDataStoredMessage(){
+  $('#attendance-data-stored-message').hide();
+  setAttendanceDataStoredStatusAs('No');
 }
 function populateEmployeeList(employeeData){
   $("#employee-list").html("");
@@ -108,19 +126,50 @@ function populateEmployeeList(employeeData){
       $("#employee-list").append(value+"<br/>");
   });
 }
-function showLoginPage(){
-  $(".page").hide();
-  $("#login-page").show();
+function showSignInForm(){
+  $("#sign-in-form").show();
 }
-function showNoEmployeeDataPage(){
-  $(".page").hide();
-  $("#no-employee-data-page").show();
+function hideSignInForm(){
+  $("#sign-in-form").hide();
+}
+function showNoEmployeeDataError(){
+  $("#no-employee-data-offline-error").show();
 }
 function showSpinner(){
   $("#spinner").show();
 }
 function hideSpinner(){
   $("#spinner").hide();
+}
+function showIncorrectAuthError(){
+  $('#error-message').html("Incorrect Username/Password");
+}
+function showNoNetConnectivityError(){
+  $('#error-message').html("No Net Connectivity Present. Please try again later.");
+}
+function showEmployeeDataLoadError(){
+  $('#error-message').html("There was an error in downloading Employee Data");
+}
+function showNoEmployeeDataOfflineError(){
+  $("#no-employee-data-offline-error").show();
+}
+function clearAllErrors(){
+  $('#error-message').html('');
+}
+function clearAllInfoNotices(){
+  $('#notice-info').html('');
+}
+function showSigningInMessage(){
+  $('#notice-info').html('Signing In');
+}
+function showErrorDuringDataUploadMessage(){
+  $('#error-message').html("There was an error during data upload. Please try again later.");
+}
+function setNoticeAskingForSignInToGetEmployeeData(){
+  $('#notice-info').html('Sign In to download employee data');
+}
+function setNoticeAskingForSignInToSendDataToServer(){
+  $('#notice-info').html('Sign In to send data to server');
 }
 function addAttendanceDataInStoredDataView(attendanceData){
   rawImageData = attendanceData['photo_data'].replace(/^data\:image\/\w+\;base64\,/, ''); 
@@ -136,19 +185,17 @@ function checkForInternet(loop){
         url: "http://www.manaple.com",
         async:"true",  
         error: function(){
-          $("#internet-status").html("Status: Offline");
+          setNetStatusAs('Offline');
           if (loop == 'false'){ 
-            hideSpinner();           
-            setTakePhotoPage();
+            hideSpinner();         
           }
           else{
             setTimeout(checkForInternet, 5*1000);
           }
         },
         success: function(data){  
-          setTakePhotoPage();
-          $("#message").html("");
-          $("#internet-status").html("Status: Online");
+          setTakePhotoContainer();
+          setNetStatusAs('Online');
           if (loop == 'false'){            
             hideSpinner();
           } 
@@ -156,6 +203,7 @@ function checkForInternet(loop){
             if (result['attendanceData'] != null)
             {
               $("#attendance-data-stored-message").show();   
+              $('#attendance-data-stored-status').html('Yes');
             }
           });
           chrome.storage.local.get('employeeData',function(result){
@@ -165,17 +213,17 @@ function checkForInternet(loop){
               populateEmployeeList(employeeData);
             }
             else{
-              showNoEmployeeDataPage();
+              showNoEmployeeDataError();
             }
           });
         },
         beforeSend: function(){
           if (loop == 'false'){
-            $('#internet-status').html("Status: Checking");
+            setNetStatusAs('Checking');
             showSpinner();
           }          
         }
-      });    
+  });    
 }
 
 function populateSelectNameTag(employeeData){
@@ -204,71 +252,60 @@ function populateSelectTag(tagId,data){
     selectTag.options.add(new Option(itemName, itemId));  
   };   
 }
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function (){
   var authToken,authEmail,attendanceData = {}, employeeId, dataUri, rawImageData, employeeData = {};
   var storage = chrome.storage.local;
-  updateAttendanceTimerCount();
-
+  updateAttendanceTimerCount();  
+  checkForInternet('true');
   var target = document.getElementById("spinner");
   var spinner = new Spinner().spin(target); 
   storage.get('employeeData',function(result){
     if (result['employeeData'] != null)
     {
       employeeData = result['employeeData'];        
-      $.ajax({
-        type: "HEAD",
-        url: "http://www.manaple.com",
-        async:"true",  
-        error: function(){
-          setTakePhotoPage(employeeData);
-          checkForInternet('true');
-        },
-        success: function(data){  
-          setTakePhotoPage(employeeData);
-          populateEmployeeList(employeeData);
-        }
-      });      
+      setTakePhotoPage(employeeData);
+      populateEmployeeList(employeeData);   
     }
     else{
-      showNoEmployeeDataPage();
+      showNoEmployeeDataOfflineError();
     }
   });
   storage.get('attendanceData',function(result){
       if (result['attendanceData'] != null)
       {
         $("#attendance-data-stored-message").show();   
+        // Todo - Initiate sending stored data
       }
       var attendanceData = result['attendanceData'];     
       $.each(attendanceData, function( index, data ) {
         addAttendanceDataInStoredDataView(data);        
       });
-  });
-    
-  
-    $("#take-picture-button").click(function(){    
-      showSavePictureAndTakeAnotherButtonContainer();
-      var selectName = document.getElementById('select-name');
-      employeeId = selectName.options[selectName.selectedIndex].value;
-      employeeName = selectName.options[selectName.selectedIndex].text;
-      var description = "";
-      var selectedDescription = $("input[type='radio'][name='attendance_description']:checked");
-      if (selectedDescription.length > 0) {
-          description = selectedDescription.val();
-      }
-    	dataUri = Webcam.snap();
-    	rawImageData = dataUri.replace(/^data\:image\/\w+\;base64\,/, '');
+  });  
+  $("#take-picture-button").click(function(){    
+    showSavePictureAndTakeAnotherButtonContainer();
+    var selectName = document.getElementById('select-name');
+    employeeId = selectName.options[selectName.selectedIndex].value;
+    employeeName = selectName.options[selectName.selectedIndex].text;
+    var description = "";
+    var selectedDescription = $("input[type='radio'][name='attendance_description']:checked");
+    if (selectedDescription.length > 0) {
+        description = selectedDescription.val();
+    }
+  	dataUri = Webcam.snap();
+  	rawImageData = dataUri.replace(/^data\:image\/\w+\;base64\,/, '');
 
-    	$('#webcam').html('<img src="'+dataUri+'"/>');    
-      attendanceData = {
-                      'user_id' : employeeId,
-                      'photo_data' : dataUri,
-                      'employee_name':employeeName,
-                      'count' : '0',
-                      'description' : description
-                       };
-    })
+  	$('#webcam').html('<img src="'+dataUri+'"/>');    
+    attendanceData = {
+                    'user_id' : employeeId,
+                    'photo_data' : dataUri,
+                    'employee_name':employeeName,
+                    'count' : '0',
+                    'description' : description
+                     };
+  })
   $("#save-picture-button").click(function(){
     storage.get('attendanceData',function(result){
+      // Todo - send if net is there
       if (result['attendanceData'] != null)
       {
         var storedAttendanceData = result['attendanceData'];
@@ -278,16 +315,16 @@ document.addEventListener('DOMContentLoaded', function () {
       else{        
         storage.set({'attendanceData':[attendanceData]});
       }
-      $("#attendance-data-stored-message").show();  
+      showAttendanceDataStoredMessage();
     });   
     addAttendanceDataInStoredDataView(attendanceData);
     showMarkAnotherAttendanceButton();
   });
   $("#mark-another-attendance-button").click(function(){
-    setTakePhotoPage();
+    setTakePhotoContainer();
   });
   $("#take-another-picture-button").click(function(){
-    setTakePhotoPage();
+    setTakePhotoContainer();
   })
   $("#check-internet-connection-button").click(function(){
     checkForInternet('false');
@@ -297,60 +334,57 @@ document.addEventListener('DOMContentLoaded', function () {
       loadEmployeeData(authEmail,authToken);
     }
     else{
-      showLoginPage();
+      setNoticeAskingForSignInToGetEmployeeData();
+      showSignInForm();
     }
   });
   $("#sign-in-button").click(function(){
     var email = $("#user-email").val();
     var password = $("#user-password").val();
     var loginCredentials = {
-                            "email":email,
-                            "password":password
+                              "email":email,
+                              "password":password
                             };
-
     $.ajax({
         type: "POST",
         url: "http://www.manaple.com/users/sign_in.json",
         data:loginCredentials,
         async:"true",  
         error: function(xhr, status, error){
-          $('#message').html("");
           hideSpinner();
           if (xhr.status == 401){
-            $("#message").html("Incorrect username or password");
+            setNetStatusAs('Online');
+            showIncorrectAuthError();
           }
           else{
-            $("#message").html("No Internet Connectivity Present!<br/> Check your connection and try again.");
-            setTakePhotoPage(employeeData);
+            setNetStatusAs('Offline');
+            showNoNetConnectivityError();
           }
         },
         success: function(data){  
-          $('#message').html("");
           hideSpinner();
           authToken = data['user']['auth_token'];
           authEmail = data['user']['email'];
           sendAttendanceData(authEmail,authToken);
           loadEmployeeData(authEmail,authToken);
-          setTakePhotoPage(employeeData);
         },
         beforeSend: function(){
-          $('#message').html("Signing In");
+          showSigningInMessage();
           showSpinner();
         }
-      });
-  })	
+    });
+  });	
   $("#send-data-to-server-button").click(function(){
     if (authToken != null){
       sendAttendanceData(authEmail,authToken);
     }
-    else{   
-      $("#message").html("");
-      showLoginPage();
+    else{
+      showSignInForm();
     }
   });
   $("#view-stored-data-button").click(function(){
     $("#show-stored-data-message").toggle();
     $("#hide-stored-data-message").toggle();
     $("#stored-data").toggle();
-  })
-});
+  });
+})
