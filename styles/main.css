@@ -45,8 +45,9 @@ h1 {
 .photo-control{
   display:none;
 }
-#attendance-data-stored-message{
-  display:none;
+.container{
+  width: 970px;
+  max-width: none !important;
 }
 #spinner{
   width:0px;
@@ -71,13 +72,13 @@ h1 {
   display:none;
 }
 #error-message-container{
-  background-color: red;
+  color: #d9534f;
 }
 #notice-info-container{
-  background-color: blue;
+  color: #428bca;
 }
 #notice-success-container{
-  background-color: green;
+  color: #5cb85c;
 }
 .input-inline{
   width: 30%;
@@ -85,4 +86,30 @@ h1 {
 #sign-in-form{
   width: 700px;
   margin: 0 auto;
+}
+#message-board{
+  width: 500px;
+  margin: 0 auto;
+  height: 60px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+#attendance-data-stored-message{
+  background-color:red;
+  color:white;
+  margin-bottom: 5px;
+}
+#attendance-data-stored-message-container{
+  width: 500px;
+  margin: 0 auto;
+
+}
+.positive-text{
+  color: #5cb85c;
+}
+.negative-text{
+  color: #d9534f;
+}
+.info-text{
+  color: #428bca;
 }

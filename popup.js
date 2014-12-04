@@ -91,7 +91,7 @@ function sendAttendanceData(authEmail,authToken) {
         $("#stored-data-table-body").html("");
       },
       beforeSend: function(){
-        $("#attendance-data-stored-message").hide();
+        $('attendance-data-stored-message-container').hide();
         $('#notice-info').html("Sending Attendance Data");
         showSpinner();
       }
@@ -174,17 +174,28 @@ function updateAttendanceTimerCount()
  
 
 function setNetStatusAs(status){
-  $('#net-status').html(status);
+  var textClass = 'negative-text';
+  if (status == "Online"){
+    textClass = "positive-text";
+  }
+  else if (status == "Checking"){
+    textClass = "info-text";
+  }
+  $('#net-status').html("<span class = '"+textClass+"'>"+status+"</span>");
 }
 function setAttendanceDataStoredStatusAs(status){
-  $('#attendance-data-stored-status').html(status);
+  var textClass = 'positive-text';
+  if (status == "Yes"){
+    textClass = "negative-text";
+  }
+  $('#attendance-data-stored-status').html("<span class = '"+textClass+"'>"+status+"</span>");
 }
 function showAttendanceDataStoredMessage(){
-  $('#attendance-data-stored-message').show();
+  $('#attendance-data-stored-message-container').show();
   setAttendanceDataStoredStatusAs('Yes');
 }
 function hideAttendanceDataStoredOfflineMessage(){
-  $('#attendance-data-stored-message').hide();
+  $('#attendance-data-stored-message-container').hide();
   setAttendanceDataStoredStatusAs('No');
 }
 function populateEmployeeList(employeeData){
@@ -362,7 +373,8 @@ document.addEventListener('DOMContentLoaded', function (){
     if (result['employeeData'] != null)
     {
       employeeData = result['employeeData'];        
-      setTakePhotoPage(employeeData);
+      console.log (employeeData);
+      setTakePhotoContainer(employeeData);
       populateEmployeeList(employeeData);   
     }
     else{
@@ -449,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function (){
       sendAttendanceData(authEmail,authToken);
     }
     else{
-      showSignInForm();
+      signIn();
     }
   });
   $("#view-stored-data-button").click(function(){

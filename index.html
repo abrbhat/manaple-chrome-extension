@@ -19,12 +19,12 @@
 			<div class = "centering-table-cell">
 				<h3><strong>Manaple Offline Attendance Portal</strong></h3>
 				<div class = 'row'>
-					<div class = 'col-md-5'>
+					<div class = 'col-xs-5'>
 						<div id = 'attendance-data-stored-status-container'>
-							Attendance Data Stored:<span id = 'attendance-data-stored-status'>No</span>
+							Attendance Data Stored Offline:<span id = 'attendance-data-stored-status'><span class='positive-text'>No</span></span>
 						</div>
 					</div>					
-					<div class = 'col-md-3 col-md-offset-4' id = 'net-status-container'>						
+					<div class = 'col-xs-3 col-xs-offset-4' id = 'net-status-container'>						
 						Net Status:<span id = 'net-status'></span>
 						<div class="btn btn-primary" id="check-internet-connection-button">
 							Refresh
@@ -35,18 +35,24 @@
 						No Employee Data Found Offline</br>
 						<input type="button" id="" class="btn btn-primary load-employee-data-button" value="Load Data (Internet Connectivity is Required)"></input>
 				</div>
-				<div id = 'error-message-container'>					
-					<div id = 'error-message'></div>
-				</div>
-				<div id = 'notice-info-container'>					
-					<div id = 'notice-info'></div>
-				</div>	
-				<div id = 'notice-success-container'>					
-					<div id = 'notice-success'></div>
+				<div id = 'message-board' class = 'well'>
+					<div id = 'error-message-container' class = 'message-container'>					
+						<div id = 'error-message'></div>
+					</div>
+					<div id = 'notice-info-container' class = 'message-container'>					
+						<div id = 'notice-info'></div>
+					</div>	
+					<div id = 'notice-success-container' class = 'message-container'>					
+						<div id = 'notice-success'></div>
+					</div>
 				</div>
 				<div class = 'container'>											
-					<div id = "attendance-data-stored-message" class="central-module">
-						DO NOT CLOSE THIS WINDOW! IT WILL RESULT IN LOSING OF STORED DATA!!</br>
+					<div id = "attendance-data-stored-message-container" class = 'hidden-element' >
+						<div id = 'attendance-data-stored-message'>
+							DO NOT CLOSE THIS WINDOW! </br>
+							IT WILL RESULT IN LOSING OF STORED DATA!!
+							</br>
+						</div>
 						<div class = "btn btn-primary" id="view-stored-data-button">
 							<span id="show-stored-data-message">Show</span>
 							<span id="hide-stored-data-message" class="hidden-element">Hide</span> 
@@ -115,7 +121,7 @@
 							<input type="button" id="take-picture-button" class="btn btn-primary" value="Take Picture"></input>
 						</div>
 						<div id ="save-picture-and-take-another-buttons-container" class='photo-control'>
-				        	<input type="button" id="save-picture-button" class="btn btn-primary" value="Save Offline"></input>
+				        	<input type="button" id="save-picture-button" class="btn btn-primary" value="Save"></input>
 				        	<input type="button" id="take-another-picture-button" class="btn btn-primary" value="Take Another"></input>
 				        </div>
 				        <div id="mark-another-attendance-button-container" class='photo-control'>
