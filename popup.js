@@ -336,7 +336,7 @@ function populateSelectNameTag(employeeData){
           populateSelectTag('select-name',employeeData);           
         }
         else{
-          showNoEmployeeDataPage();
+          showNoEmployeeDataOfflineError();
         }
       });
     }    

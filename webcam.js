@@ -48,7 +48,10 @@ var Webcam = {
 		live: null,
 		uploadcomplete: null,
 		uploadprogress: null,
-		error: function(msg) { $("#message").html("Webcam Error:"+msg); }
+		error: function(msg) { 
+			$("#error-message").html("Your webcam is not accessible"); 
+			console.log('webcam-error');
+		}
 	}, // callback hook functions
 	
 	init: function() {
