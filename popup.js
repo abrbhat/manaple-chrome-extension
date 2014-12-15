@@ -135,18 +135,29 @@ function sendAttendanceData(authEmail,authToken) {
         }
         else{
           hideSpinner();
-          showErrorDuringDataUploadMessage();
-          showAttendanceDataStoredOfflineMessage();
+          showNoNetConnectivityError();
+          showAttendanceDataStoredOfflineMessage(); 
+          if ($('body').data('checkingForInternet') != true){  
+            checkForInternet('true');
+          }         
         }        
       },
       success: function(data){
         hideSpinner();    
         clearAllMessages();
-        hideAttendanceDataStoredOfflineMessage();
-        showDataUploadSuccessfulMessage();
-        $( "#notice-info" ).data( "sendingAttendanceData", false );
-        chrome.storage.local.remove('attendanceData');
-        $("#stored-data-table-body").html("");
+        if (data['data_saved'] == 'true'){
+          chrome.storage.local.remove('attendanceData');
+          hideAttendanceDataStoredOfflineMessage();
+          showDataUploadSuccessfulMessage();
+          $("#notice-info").data("sendingAttendanceData", false );        
+          $("#stored-data-table-body").html("");
+        }
+        else{
+          setNetStatusAs('Online');  
+          hideSpinner();
+          showErrorDuringDataUploadMessage();
+          showAttendanceDataStoredOfflineMessage();
+        }        
       },
       beforeSend: function(){  
         showSpinner();
@@ -330,13 +341,15 @@ function addAttendanceDataInStoredDataView(attendanceData){
   $("#stored-data-table-body").append(html);
 }
 function checkForInternet(loop){
+  $('body').data('checkingForInternet',true );
   $.ajax({
         type: "HEAD",
         url: "http://www.manaple.com",
         async:"true",  
         error: function(){
           setNetStatusAs('Offline');
-          if (loop == 'false'){ 
+          if (loop == 'false'){
+            $('body').data('checkingForInternet',false); 
             hideSpinner();         
           }
           else{
@@ -344,6 +357,7 @@ function checkForInternet(loop){
           }
         },
         success: function(data){  
+          $('body').data('checkingForInternet',false);
           setTakePhotoContainer();
           setNetStatusAs('Online');
           if (loop == 'false'){            
