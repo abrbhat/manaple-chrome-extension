@@ -26,9 +26,9 @@ function signIn(email,password){
         authToken = result['authToken'];  
         storedAuthEmail = authToken['email'];
         storedAuthToken = authToken['token'];
-        if ((storedAuthEmail != null) && (storedAuthToken!=null)){
-          loadEmployeeData(storedAuthEmail,storedAuthToken,true);
-          sendAttendanceData(storedAuthEmail,storedAuthToken);         
+        if ((storedAuthEmail != null) && (storedAuthToken!=null)){          
+          sendAttendanceData(storedAuthEmail,storedAuthToken);  
+          loadEmployeeData(storedAuthEmail,storedAuthToken,true);       
         }
         else{          
           removeAllAuthDataFromLocalStorage();
@@ -64,9 +64,9 @@ function signIn(email,password){
                 hideSignInForm();
                 authEmail = data['user']['email'];    
                 authToken = data['user']['auth_token'];            
-                setAuthTokenInLocalStorage(authEmail,authToken);        
+                setAuthTokenInLocalStorage(authEmail,authToken);                 
+                sendAttendanceData(authEmail,authToken);       
                 loadEmployeeData(authEmail,authToken,true);
-                sendAttendanceData(authEmail,authToken);
               },
               beforeSend: function(){
                 showSigningInMessage();
@@ -96,14 +96,20 @@ function loadEmployeeData(authEmail,authToken,setTakePhoto){
           }          
         },
         success: function(employeeData){
-          chrome.storage.local.set({'employeeData':employeeData});
-          populateSelectNameTag(employeeData);
-          populateEmployeeList(employeeData);
-          setNetStatusAs('Online');
-          hideNoEmployeeDataOfflineError(); 
-          if ($("#notice-info").data("sendingAttendanceData") != true){     
-            setTakePhotoContainer();
-          }    
+          if ((Object.keys(employeeData).length) < 20){
+            chrome.storage.local.set({'employeeData':employeeData});
+            populateSelectNameTag(employeeData);
+            setNetStatusAs('Online');
+            hideNoEmployeeDataOfflineError(); 
+            if ($("#notice-info").data("sendingAttendanceData") != true){     
+              setTakePhotoContainer();
+            }    
+          }
+          else{
+            setNetStatusAs('Online');            
+            removeAllAuthDataFromLocalStorage();
+            signIn();
+          }
         }
       });      
 }
@@ -250,12 +256,6 @@ function hideAttendanceDataStoredOfflineMessage(){
   $('#attendance-data-stored-message-container').hide();
   setAttendanceDataStoredStatusAs('No');
 }
-function populateEmployeeList(employeeData){
-  $("#employee-list").html("");
-  $.each(employeeData, function( key, value ) {
-      $("#employee-list").append(value+"<br/>");
-  });
-}
 function showSignInForm(){
   $("#sign-in-form").show();
 }
@@ -331,6 +331,10 @@ function setNoticeAskingForSignInToSendDataToServer(){
 function removeAllAuthDataFromLocalStorage(){
   chrome.storage.local.remove('authData'); 
   chrome.storage.local.remove('authToken'); 
+  removeAllEmployeeDataFromLocalStorage();
+}
+function removeAllEmployeeDataFromLocalStorage(){
+  chrome.storage.local.remove('employeeData'); 
 }
 function addAttendanceDataInStoredDataView(attendanceData){
   rawImageData = attendanceData['photo_data'].replace(/^data\:image\/\w+\;base64\,/, ''); 
@@ -374,7 +378,7 @@ function checkForInternet(loop){
             if (result['employeeData'] != null)
             {
               employeeData = result['employeeData']; 
-              populateEmployeeList(employeeData);
+              populateSelectNameTag(employeeData);
             }
             else{
               signIn();
@@ -440,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function (){
     {
       employeeData = result['employeeData']; 
       setTakePhotoContainer(employeeData);
-      populateEmployeeList(employeeData);   
+      populateSelectNameTag(employeeData);   
     }
     else{
       showNoEmployeeDataOfflineError();
